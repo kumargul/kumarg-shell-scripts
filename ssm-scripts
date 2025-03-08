@@ -1,0 +1,115 @@
+ssm-connect(){
+  instance_id=$(aws ec2 describe-instances --filters "Name=instance-state-name,Values=running" "Name=tag:Name,Values=${1}*" \
+--query 'Reservations[].Instances[].InstanceId' --output text)
+  instance_ids=$(aws ec2 describe-instances --filters "Name=instance-state-name,Values=running" "Name=tag:Name,Values=${1}*" \
+--query 'Reservations[].Instances[].InstanceId')
+
+
+  id_arr=( $(aws ec2 describe-instances --filters "Name=instance-state-name,Values=running" "Name=tag:Name,Values=${1}*" \
+--query 'Reservations[].Instances[].InstanceId' --output text) )
+
+  if [ $(echo $instance_ids | jq length) -gt 1 ]; then
+    echo "This name has multiple EC2 instances, select which one you want to connect to..."
+    select id in $id_arr; do
+      case $id in
+        exit) echo "Exiting..."
+              break ;;
+           *) echo "Connecting to $1 with instance id: $id"
+              aws ssm start-session --target $id
+              break ;;
+      esac
+    done
+  else
+    echo "Single EC2 instance found for $1 with instance id: $instance_id"
+    aws ssm start-session --target $instance_id
+  fi
+}
+ssm-id(){
+  aws ssm start-session --target $1
+}
+ssm-win(){
+  aws ssm start-session --target ${1} --document-name AWS-StartPortForwardingSession --parameters "localPortNumber=55678,portNumber=3389"  --region ap-southeast-2
+}
+ssm-cmd(){
+  if [[ -z $1 ]] && [[ -z $2 ]] && [[ -z $3 ]]; then
+     echo "Usage: ssm-cmd <Tag key> <Tag value> <command to execute on that instance>"
+     exit 100
+  fi
+  #instance_id=( $(aws ec2 describe-instances --filters "Name=instance-state-name,Values=running" "Name=tag:Name,Values=${1}*" \
+#--query 'Reservations[].Instances[].InstanceId' --output text) )
+  echo "Running command: $3 for $1:$2"
+  doc_id=$(aws ssm send-command \
+    --targets Key=tag:$1,Values=$2 \
+    --document-name "AWS-RunShellScript" \
+    --comment ${4} \
+    --parameters commands="${3}" | jq -r .Command.CommandId)
+  export DOC_ID=$doc_id
+  export LAST_EXECUTED_SSM_COMMAND=$3
+  echo "Last executed SSM Command was: ${LAST_EXECUTED_SSM_COMMAND}"
+  echo "SSM Document ID is: ${DOC_ID}"
+  aws ssm list-command-invocations \
+    --command-id $DOC_ID \
+    --details \
+#    --query "CommandInvocations[].CommandPlugins[].Output"
+}
+ssm-cmd-json(){
+  if [[ -z $1 ]] && [[ -z $2 ]]; then
+     echo "Usage: ssm-cmd <Tag key> <Tag value> <json file name>"
+     echo "Sample: ssm-cmd-json Environment sit /tmp/test.json"
+     exit 100
+  fi
+  instance_id=$(aws ec2 describe-instances --filters "Name=instance-state-name,Values=running" "Name=tag:Name,Values=${1}*" \
+--query 'Reservations[].Instances[].InstanceId' --output text)
+  echo "Running command: $2 on instance-id: $instance_id"
+  doc_id=$(aws ssm send-command \
+    --targets Key=tag:$1,Values=$2 \
+    --document-name "AWS-RunShellScript" \
+    --comment "Running script from $2" \
+    --cli-input-json file://${3} | jq -r .Command.CommandId)
+  export DOC_ID=$doc_id
+  export LAST_EXECUTED_SSM_COMMAND=$2
+  echo "Last executed SSM Command was: ${LAST_EXECUTED_SSM_COMMAND}"
+  echo "SSM Document ID is: ${DOC_ID}"
+  aws ssm list-command-invocations \
+    --command-id $DOC_ID \
+    --details
+}
+ssm-cmd-json-instances(){
+  if [[ -z $1 ]] && [[ -z $2 ]]; then
+     echo "Usage: ssm-cmd <instance-name> <json file name>"
+     exit 100
+  fi
+  instance_id=$(aws ec2 describe-instances --filters "Name=instance-state-name,Values=running" "Name=tag:Name,Values=${1}*" \
+--query 'Reservations[].Instances[].InstanceId' --output text)
+  echo "Running command: $2 on instance-id: $instance_id"
+  doc_id=$(aws ssm send-command \
+    --instance-ids $1 \
+    --document-name "AWS-RunShellScript" \
+    --comment "Running script from $2" \
+    --cli-input-json file://${2} | jq -r .Command.CommandId)
+  export DOC_ID=$doc_id
+  export LAST_EXECUTED_SSM_COMMAND=$2
+  echo "Last executed SSM Command was: ${LAST_EXECUTED_SSM_COMMAND}"
+  echo "SSM Document ID is: ${DOC_ID}"
+  #aws ssm list-command-invocations \
+    --command-id $DOC_ID \
+    --details
+}
+ssm-cmd-status(){
+  echo "Last executed SSM Command was: ${LAST_EXECUTED_SSM_COMMAND}"
+  echo "SSM Document ID is: ${DOC_ID}"
+  aws ssm list-command-invocations \
+    --command-id $DOC_ID \
+    --details
+}
+ssm-cmd-doc(){
+  echo "Environment is $1"
+  instance_ids=( $(aws ec2 describe-instances --filters "Name=instance-state-name,Values=running" "Name=tag:Environment,Values=${1}*" \
+    --query 'Reservations[].Instances[].InstanceId' --output text))
+  doc_id=$(aws ssm send-command --instance-ids $2 --document-name "deploy_cw_monitoring" \
+  #doc_id=$(aws ssm send-command --instance-ids $instance_ids --document-name "deploy_cw_monitoring" \
+  --comment "Setting up CW Infra monitoring for Environment: $1" \
+  --parameters Environment=$1 |\
+ jq -r .Command.CommandId)
+  echo "Check Run command: $doc_id"
+}

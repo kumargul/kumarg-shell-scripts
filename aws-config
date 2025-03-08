@@ -1,0 +1,72 @@
+[profile eindex-dev]
+sso_start_url = https://nswh.awsapps.com/start#
+sso_region = ap-southeast-2
+sso_account_id = XXXXXXXXXXXX
+sso_role_name = Provider-Administrator
+
+[profile eindex-sesi]
+sso_start_url = https://nswh.awsapps.com/start#
+sso_region = ap-southeast-2
+sso_account_id = XXXXXXXXXXXX
+sso_role_name = Provider-Administrator
+
+[profile eindex-gsgw]
+sso_start_url = https://nswh.awsapps.com/start#
+sso_region = ap-southeast-2
+sso_account_id = XXXXXXXXXXXX
+sso_role_name = Provider-Administrator
+
+[profile eindex-sw]
+sso_start_url = https://nswh.awsapps.com/start#
+sso_region = ap-southeast-2
+sso_account_id = XXXXXXXXXXXX
+sso_role_name = Provider-Administrator
+
+[profile esb-nonp]
+sso_account_id = XXXXXXXXXXXX
+sso_start_url = https://nswh.awsapps.com/start#
+sso_region = ap-southeast-2
+sso_role_name = Provider-Administrator
+
+[profile esb-prod]
+sso_start_url = https://nswh.awsapps.com/start#
+sso_region = ap-southeast-2
+sso_account_id = XXXXXXXXXXXX
+sso_role_name = Provider-Administrator
+
+[profile epr-nonp]
+sso_start_url = https://nswh.awsapps.com/start#
+sso_region = ap-southeast-2
+sso_account_id = XXXXXXXXXXXX
+sso_role_name = Provider-Administrator
+
+[profile cris-tool]
+sso_start_url = https://nswh.awsapps.com/start#
+sso_region = ap-southeast-2
+sso_account_id = XXXXXXXXXXXX
+sso_role_name = Provider-Administrator
+
+
+[profile eir-dev]
+sso_start_url = https://nswh.awsapps.com/start#
+sso_region = ap-southeast-2
+sso_account_id = XXXXXXXXXXXX
+sso_role_name = Provider-Administrator
+
+[profile eir-uat]
+sso_start_url = https://nswh.awsapps.com/start#
+sso_region = ap-southeast-2
+sso_account_id = XXXXXXXXXXXX
+sso_role_name = Provider-Administrator
+
+
+[profile eir-prod]
+sso_start_url = https://nswh.awsapps.com/start#
+sso_region = ap-southeast-2
+sso_account_id = XXXXXXXXXXXX
+sso_role_name = Provider-Administrator
+
+[sso-session nswhprovider]
+sso_start_url = https://nswh.awsapps.com/start#
+sso_region = ap-southeast-2
+sso_registration_scopes = sso:account:access
